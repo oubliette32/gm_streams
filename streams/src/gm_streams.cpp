@@ -64,24 +64,26 @@ typedef int int32;
 #pragma region Utility
 void PushUInt64(lua_State* state, uint64 value)
 {
-	uint64* copy = new uint64(value);
-
-	UserData* ud = (UserData*)LUA->NewUserdata(sizeof(UserData));
-	ud->data = copy;
+	UserData* ud = (UserData*)LUA->NewUserdata(sizeof(UserData) + sizeof(uint64));
+	ud->data = ud + 1;
 	ud->type = TYPE_UINT64;
+
 	LUA->ReferencePush(g_iUInt64MetaTable);
 	LUA->SetMetaTable(-2);
+
+	*(reinterpret_cast<uint64*>(ud->data)) = value;
 }
 
 void PushInt64(lua_State* state, int64 value)
 {
-	int64* copy = new int64(value);
-
-	UserData* ud = (UserData*)LUA->NewUserdata(sizeof(UserData));
-	ud->data = copy;
+	UserData* ud = (UserData*)LUA->NewUserdata(sizeof(UserData) + sizeof(int64));
+	ud->data = ud + 1;
 	ud->type = TYPE_INT64;
+
 	LUA->ReferencePush(g_iUInt64MetaTable);
 	LUA->SetMetaTable(-2);
+
+	*(reinterpret_cast<int64*>(ud->data)) = value;
 }
 #pragma endregion
 
@@ -411,15 +413,6 @@ int UInt64_ToString(lua_State* state)
 }
 
 ///
-/// __gc
-///
-int UInt64_GC(lua_State* state)
-{
-	delete ((uint64*)((UserData*)LUA->GetUserdata(1))->data);
-	return 0;
-}
-
-///
 /// __unm
 ///
 int UInt64_Neg(lua_State* state)
@@ -612,15 +605,6 @@ int Int64_ToString(lua_State* state)
 	s << *GETINT64(1);
 	LUA->PushString(s.str().c_str());
 	return 1;
-}
-
-///
-/// __gc
-///
-int Int64_GC(lua_State* state)
-{
-	delete ((int64*)((UserData*)LUA->GetUserdata(1))->data);
-	return 0;
 }
 
 ///
@@ -926,12 +910,6 @@ GMOD_MODULE_OPEN()
 #pragma region UInt64 Meta Methods
 	LUA->CreateTable();
 
-		LUA->PushCFunction(UInt64_GC);
-		LUA->SetField(-2, "__gc");
-
-		LUA->PushCFunction(UInt64_ToString);
-		LUA->SetField(-2, "__tostring");
-
 		LUA->PushCFunction(UInt64_ToString);
 		LUA->SetField(-2, "__tostring");
 
@@ -969,12 +947,6 @@ GMOD_MODULE_OPEN()
 
 #pragma region Int64 Meta Methods
 	LUA->CreateTable();
-
-	LUA->PushCFunction(Int64_GC);
-	LUA->SetField(-2, "__gc");
-
-	LUA->PushCFunction(Int64_ToString);
-	LUA->SetField(-2, "__tostring");
 
 	LUA->PushCFunction(Int64_ToString);
 	LUA->SetField(-2, "__tostring");
