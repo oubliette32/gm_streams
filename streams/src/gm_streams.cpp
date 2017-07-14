@@ -35,7 +35,7 @@ typedef int int32;
 #define OPEN_READONLY		std::ios::binary | std::ios::in
 #define OPEN_WRITEONLY		std::ios::binary | std::ios::out
 #define OPEN_READWRITE		std::ios::binary | std::ios::out | std::ios::in
-	
+
 // nice code noob
 #define PUSH_GLOBAL(key, value, type) LUA->PushSpecial(GarrysMod::Lua::SPECIAL_GLOB);\
 	LUA->PushString(key);\
@@ -94,12 +94,14 @@ void PushInt64(lua_State* state, int64 value)
 ///
 int Stream_GC(lua_State* state)
 {
-	LUA->CheckType(1, TYPE_STREAM);
+	// Don't use CheckType here because it breaks ARCLib
+	if (LUA->IsType(1, TYPE_STREAM))
+	{
+		Stream* stream = GETSTREAM(1);
+		stream->Close();
 
-	Stream* stream = GETSTREAM(1);
-	stream->Close();
-
-	return 0;
+		return 0;
+	}
 }
 
 ///
@@ -186,7 +188,7 @@ int Stream_TellRead(lua_State* state)
 	LUA->CheckType(1, TYPE_STREAM);
 	CHECKSTREAM(1);
 	Stream* stream = GETSTREAM(1);
-	
+
 	PushUInt64(state, stream->TellRead());
 	return 1;
 }
@@ -323,7 +325,7 @@ STREAM_FUNCTION_READ(double, Number, Double)
 int Stream_WriteUInt64(lua_State* state)
 {
 	CHECKSTREAM(1)
-	LUA->CheckType(1, TYPE_STREAM);
+		LUA->CheckType(1, TYPE_STREAM);
 	LUA->CheckType(2, TYPE_UINT64);
 
 	Stream* stream = GETSTREAM(1);
@@ -334,7 +336,7 @@ int Stream_WriteUInt64(lua_State* state)
 int Stream_ReadUInt64(lua_State* state)
 {
 	CHECKSTREAM(1)
-	LUA->CheckType(1, TYPE_STREAM);
+		LUA->CheckType(1, TYPE_STREAM);
 	Stream* stream = GETSTREAM(1);
 
 	PushUInt64(state, stream->Read<uint64>());
@@ -798,7 +800,7 @@ int NumberToUInt64(lua_State* state)
 	{
 		num = 0xFFFFFFFFFFFFFFFF;
 	}
-	else 
+	else
 		num = (uint64)LUA->GetNumber(1);
 
 	PushUInt64(state, num);
@@ -848,61 +850,61 @@ GMOD_MODULE_OPEN()
 {
 #pragma region Stream Methods
 	LUA->CreateTable();
-		STREAM_BIND(WriteInt8);
-		STREAM_BIND(WriteInt16);
-		STREAM_BIND(WriteInt32);
-		STREAM_BIND(WriteInt64);
+	STREAM_BIND(WriteInt8);
+	STREAM_BIND(WriteInt16);
+	STREAM_BIND(WriteInt32);
+	STREAM_BIND(WriteInt64);
 
-		STREAM_BIND(WriteUInt8);
-		STREAM_BIND(WriteUInt16);
-		STREAM_BIND(WriteUInt32);
-		STREAM_BIND(WriteUInt64);
+	STREAM_BIND(WriteUInt8);
+	STREAM_BIND(WriteUInt16);
+	STREAM_BIND(WriteUInt32);
+	STREAM_BIND(WriteUInt64);
 
-		STREAM_BIND(WriteFloat);
-		STREAM_BIND(WriteDouble);
+	STREAM_BIND(WriteFloat);
+	STREAM_BIND(WriteDouble);
 
-		STREAM_BIND(ReadInt8);
-		STREAM_BIND(ReadInt16);
-		STREAM_BIND(ReadInt32);
-		STREAM_BIND(ReadInt64);
+	STREAM_BIND(ReadInt8);
+	STREAM_BIND(ReadInt16);
+	STREAM_BIND(ReadInt32);
+	STREAM_BIND(ReadInt64);
 
-		STREAM_BIND(ReadUInt8);
-		STREAM_BIND(ReadUInt16);
-		STREAM_BIND(ReadUInt32);
-		STREAM_BIND(ReadUInt64);
+	STREAM_BIND(ReadUInt8);
+	STREAM_BIND(ReadUInt16);
+	STREAM_BIND(ReadUInt32);
+	STREAM_BIND(ReadUInt64);
 
-		STREAM_BIND(ReadFloat);
-		STREAM_BIND(ReadDouble);
+	STREAM_BIND(ReadFloat);
+	STREAM_BIND(ReadDouble);
 
-		STREAM_BIND(ReadString);
-		STREAM_BIND(WriteString);
+	STREAM_BIND(ReadString);
+	STREAM_BIND(WriteString);
 
-		STREAM_BIND(Close);
-		STREAM_BIND(Clear);
-		STREAM_BIND(IsClosed);
-		STREAM_BIND(TellRead);
-		STREAM_BIND(TellWrite);
-		STREAM_BIND(SeekRead);
-		STREAM_BIND(SeekWrite);
-		STREAM_BIND(Flush);
-		STREAM_BIND(Size);
+	STREAM_BIND(Close);
+	STREAM_BIND(Clear);
+	STREAM_BIND(IsClosed);
+	STREAM_BIND(TellRead);
+	STREAM_BIND(TellWrite);
+	STREAM_BIND(SeekRead);
+	STREAM_BIND(SeekWrite);
+	STREAM_BIND(Flush);
+	STREAM_BIND(Size);
 	int streamRef = LUA->ReferenceCreate();
 #pragma endregion
 
 #pragma region Stream Meta Methods
 	LUA->CreateTable();
 
-		LUA->PushCFunction(Stream_GC);
-		LUA->SetField(-2, "__gc");
+	LUA->PushCFunction(Stream_GC);
+	LUA->SetField(-2, "__gc");
 
-		LUA->PushCFunction(Stream_ToString);
-		LUA->SetField(-2, "__tostring");
+	LUA->PushCFunction(Stream_ToString);
+	LUA->SetField(-2, "__tostring");
 
-		LUA->ReferencePush(streamRef);
-		LUA->SetField(-2, "__index");
+	LUA->ReferencePush(streamRef);
+	LUA->SetField(-2, "__index");
 
-		LUA->ReferencePush(streamRef);
-		LUA->SetField(-2, "__newindex");
+	LUA->ReferencePush(streamRef);
+	LUA->SetField(-2, "__newindex");
 
 	g_iStreamMetaTable = LUA->ReferenceCreate();
 #pragma endregion
@@ -910,38 +912,38 @@ GMOD_MODULE_OPEN()
 #pragma region UInt64 Meta Methods
 	LUA->CreateTable();
 
-		LUA->PushCFunction(UInt64_ToString);
-		LUA->SetField(-2, "__tostring");
+	LUA->PushCFunction(UInt64_ToString);
+	LUA->SetField(-2, "__tostring");
 
-		LUA->PushCFunction(UInt64_Neg);
-		LUA->SetField(-2, "__unm");
+	LUA->PushCFunction(UInt64_Neg);
+	LUA->SetField(-2, "__unm");
 
-		LUA->PushCFunction(UInt64_Add);
-		LUA->SetField(-2, "__add");
+	LUA->PushCFunction(UInt64_Add);
+	LUA->SetField(-2, "__add");
 
-		LUA->PushCFunction(UInt64_Sub);
-		LUA->SetField(-2, "__sub");
+	LUA->PushCFunction(UInt64_Sub);
+	LUA->SetField(-2, "__sub");
 
-		LUA->PushCFunction(UInt64_Mul);
-		LUA->SetField(-2, "__mul");
+	LUA->PushCFunction(UInt64_Mul);
+	LUA->SetField(-2, "__mul");
 
-		LUA->PushCFunction(UInt64_Div);
-		LUA->SetField(-2, "__div");
+	LUA->PushCFunction(UInt64_Div);
+	LUA->SetField(-2, "__div");
 
-		LUA->PushCFunction(UInt64_Mod);
-		LUA->SetField(-2, "__mod");
+	LUA->PushCFunction(UInt64_Mod);
+	LUA->SetField(-2, "__mod");
 
-		LUA->PushCFunction(UInt64_Pow);
-		LUA->SetField(-2, "__pow");
+	LUA->PushCFunction(UInt64_Pow);
+	LUA->SetField(-2, "__pow");
 
-		LUA->PushCFunction(UInt64_Equal);
-		LUA->SetField(-2, "__eq");
+	LUA->PushCFunction(UInt64_Equal);
+	LUA->SetField(-2, "__eq");
 
-		LUA->PushCFunction(UInt64_LessThan);
-		LUA->SetField(-2, "__lt");
+	LUA->PushCFunction(UInt64_LessThan);
+	LUA->SetField(-2, "__lt");
 
-		LUA->PushCFunction(UInt64_LessThanOrEqual);
-		LUA->SetField(-2, "__le");
+	LUA->PushCFunction(UInt64_LessThanOrEqual);
+	LUA->SetField(-2, "__le");
 	g_iUInt64MetaTable = LUA->ReferenceCreate();
 #pragma endregion
 
@@ -994,7 +996,7 @@ GMOD_MODULE_OPEN()
 	PUSH_GLOBAL("FileDelete", File_Delete, CFunction);
 	PUSH_GLOBAL("FileExists", File_Exists, CFunction);
 	PUSH_GLOBAL("CreateMemoryStream", Memory_OpenStream, CFunction);
-	
+
 	PUSH_GLOBAL("NumberToUInt64", NumberToUInt64, CFunction);
 	PUSH_GLOBAL("UInt64ToNumber", UInt64ToNumber, CFunction);
 	PUSH_GLOBAL("NumberToInt64", NumberToInt64, CFunction);
